@@ -30,7 +30,6 @@ function GenerateQuads(atlas, tilewidth, tileheight)
             sheetCounter = sheetCounter + 1
         end
     end
-
     return spritesheet
 end
 
@@ -45,7 +44,7 @@ function table.slice(tbl, first, last, step)
     for i = first or 1, last or #tbl, step or 1 do
       sliced[#sliced+1] = tbl[i]
     end
-  
+    
     return sliced
 end
 

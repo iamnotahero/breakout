@@ -20,9 +20,8 @@ function Powerup:init(x,y,powerup)
     self.width = 16
     self.height = 16
     self.consumed = false
-    -- these variables are for keeping track of our velocity on both the
-    -- X and Y axis, since the ball can move in two dimensions
-    self.dy = 100
+    --speed of the powerup downward
+    self.dy = 50
     self.dx = 0
     self.x = x
     self.y = y
@@ -63,20 +62,7 @@ function Powerup:reset()
 end
 
 function Powerup:update(dt)
-    self.y = self.y + self.dy * dt
-
-
-    if self.x >= VIRTUAL_WIDTH - 8 then
-        self.x = VIRTUAL_WIDTH - 8
-        self.dx = -self.dx
-        gSounds['wall-hit']:play()
-    end
-
-    if self.y <= 0 then
-        self.y = 0
-        self.dy = -self.dy
-        gSounds['wall-hit']:play()
-    end
+    self.y = self.y + self.dy * dt  
 end
 
 function Powerup:render()

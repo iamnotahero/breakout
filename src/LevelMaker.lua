@@ -32,7 +32,11 @@ LevelMaker = Class{}
 ]]
 function LevelMaker.createMap(level)
     local bricks = {}
-
+    local poweruptiers = {
+        low = {7,8},
+        mid = {3,9,5,6},
+        high = {10,4}
+    }
     -- randomly choose the number of rows
     local numRows = math.random(1, 5)
 
@@ -54,7 +58,6 @@ function LevelMaker.createMap(level)
 
         -- whether we want to enable alternating colors for this row
         local alternatePattern = math.random(1, 2) == 1 and true or false
-        local powerupchance =  math.random(1, 2) == 1 and true or false
         -- choose two colors to alternate between
         local alternateColor1 = math.random(1, highestColor)
         local alternateColor2 = math.random(1, highestColor)
@@ -94,7 +97,6 @@ function LevelMaker.createMap(level)
                 -- y-coordinate
                 y * 16                  -- just use y * 16, since we need top padding anyway
             )
-            -- get block tier if trier is above 3 and color 3 then add the possibility of having a powerup!
             -- if we're alternating, figure out which color/tier we're on
             if alternatePattern and alternateFlag then
                 b.color = alternateColor1
@@ -105,16 +107,27 @@ function LevelMaker.createMap(level)
                 b.tier = alternateTier2
                 alternateFlag = not alternateFlag
             end
-            if alternateTier1 == highestTier and powerupchance then
-                b.powerup = true
-                b.color = 5
-            end
+
             -- if not alternating and we made it here, use the solid color/tier
             if not alternatePattern then
                 b.color = solidColor
                 b.tier = solidTier
             end 
-
+            --if b.color == highestColor - math.random(0,1) and b.tier == highestTier - math.random(0,1) then
+            --powerup chance 30% chance
+            b.haspowerup = math.random(1, 100) < 60 and true or false
+            if b.haspowerup then
+                if b.color < 2 then
+                    --terary function that checks first if conditon is true then return the first value using this for randonmization of powerup
+                    b.powerupindex = math.random(1,100) < 3 and poweruptiers.high[math.random(1,2)] or math.random(1,100) < 10 and poweruptiers.mid[math.random(1,4)] or poweruptiers.low[math.random(1,2)]
+                elseif b.color <= 4 then
+                    --b.powerupindex = poweruptiers.mid[math.random(1,4)]
+                    b.powerupindex = math.random(1,100) < 5 and poweruptiers.high[math.random(1,2)] or math.random(1,100) < 60 and poweruptiers.mid[math.random(1,4)] or poweruptiers.low[math.random(1,2)]
+                elseif b.color > 4 then
+                    --b.powerupindex = poweruptiers.high[math.random(1,2)]
+                    b.powerupindex = math.random(1,100) < 20 and poweruptiers.high[math.random(1,2)] or math.random(1,100) < 80 and poweruptiers.mid[math.random(1,4)] or poweruptiers.low[math.random(1,2)]
+                end
+            end
             table.insert(bricks, b)
 
             -- Lua's version of the 'continue' statement

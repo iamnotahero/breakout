@@ -54,7 +54,8 @@ function Brick:init(x, y)
     -- used for coloring and score calculation
     self.tier = 0
     self.color = 1
-    self.powerup = false
+    self.haspowerup = false
+    self.powerupindex = 0
     self.x = x
     self.y = y
     self.width = 32
@@ -99,9 +100,7 @@ function Brick:hit()
         0
     )
     self.psystem:emit(64)
-    if self.powerup then
-        gSounds['victory']:play()
-    end
+
     -- sound on hit
     gSounds['brick-hit-2']:stop()
     gSounds['brick-hit-2']:play()

@@ -19,7 +19,6 @@ function Ball:init(skin)
     -- simple positional and dimensional variables
     self.width = 8
     self.height = 8
-    self.mainball = false
     -- these variables are for keeping track of our velocity on both the
     -- X and Y axis, since the ball can move in two dimensions
     self.dy = 0
@@ -64,13 +63,12 @@ end
 function Ball:update(dt)
     self.x = self.x + self.dx * dt
     self.y = self.y + self.dy * dt
-    if self.mainball then
-        table.insert(self.particle_array, Particle:new(self.x + self.width/2, self.y + self.height/2))
-        for i = #self.particle_array, 1, -1 do
-            self.particle_array[i]:update(dt)
-            if self.particle_array[i].size <= 0 then
-                table.remove(self.particle_array, i)
-            end
+    --add white trail behind the balls
+    table.insert(self.particle_array, Particle:new(self.x + self.width/2, self.y + self.height/2))
+    for i = #self.particle_array, 1, -1 do
+        self.particle_array[i]:update(dt)
+        if self.particle_array[i].size <= 0 then
+            table.remove(self.particle_array, i)
         end
     end
     -- allow ball to bounce off walls

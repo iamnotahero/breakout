@@ -29,7 +29,8 @@ function PlayState:enter(params)
     self.level = params.level
     self.balls = params.balls
     self.poweruplist = {}
-
+    --debug
+    self.testpowerupnumber = 0;
     self.recoverPoints = 5000
 
     -- give ball random starting velocity
@@ -58,9 +59,8 @@ function PlayState:update(dt)
     
 
 
-    for k, ball in pairs(self.balls) do
+    for k, ball in pairs(self.balls) do 
             ball:update(dt)
-            --might put the code here best 
             if ball:collides(self.paddle) then
                 -- raise ball above paddle in case it goes below it, then reverse dy
                 ball.y = self.paddle.y - 8
@@ -89,17 +89,26 @@ function PlayState:update(dt)
 
                 -- add to score
                 self.score = self.score + (brick.tier * 200 + brick.color * 25)
-
-                -- trigger the brick's hit function, which removes it from play
-                brick:hit()
-                if brick.powerup then
-                    table.insert(self.poweruplist, Powerup(brick.x,brick.y,math.random(1,6)))
+                --adds powerup to table
+                if brick.haspowerup then
+                    table.insert(self.poweruplist, Powerup(brick.x,brick.y,brick.powerupindex))
+                    -- chance of still having a powerup in the brick
+                    -- math.random(1, 2) == 1 and true or false
+                    gSounds['victory']:play()
+                    brick.haspowerup = false
                 end
+                -- trigger the brick's hit function, which removes it from play
+                --ok repeat this code to simulate stronger ball
+                brick:hit()
+                brick:hit()
+                brick:hit()
                 -- if we have enough points, recover a point of health
                 if self.score > self.recoverPoints then
                     -- can't go above 3 health
                     self.health = math.min(3, self.health + 1)
-
+                    --paddle size
+                    self.paddle.size = math.min(self.paddle.size + 1, 4)
+                    self.paddle.width = math.min(self.paddle.width + 32, 128)
                     -- multiply recover points by 2
                     self.recoverPoints = self.recoverPoints + math.min(100000, self.recoverPoints * 2)
 
@@ -173,44 +182,89 @@ function PlayState:update(dt)
         end
 
         -- if ball goes below bounds, revert to serve state and decrease health
-        if ball.y >= VIRTUAL_HEIGHT and ball.mainball then
-            self.health = self.health - 1
+        -- now it will only go to serve state if balls in the table is zero 
+        if ball.y >= VIRTUAL_HEIGHT then
+            --self.health = self.health - 1
+            --remove the ball beyond the screen 
+            table.remove(self.balls, k)
             gSounds['hurt']:play()
-
             if self.health == 0 then
                 gStateMachine:change('game-over', {
                     score = self.score,
                     highScores = self.highScores
                 })
             else
-                gStateMachine:change('serve', {
-                    paddle = self.paddle,
-                    bricks = self.bricks,
-                    health = self.health,
-                    score = self.score,
-                    highScores = self.highScores,
-                    level = self.level,
-                    recoverPoints = self.recoverPoints
-                })
+                if #self.balls == 0 then
+                    self.health = self.health - 1
+                    --paddle size reduction
+                    self.paddle.size = math.max(1 ,self.paddle.size - 1)
+                    self.paddle.width = math.max(self.paddle.width - 32, 32)
+                    gSounds['hurt']:play()
+                    gStateMachine:change('serve', {
+                        paddle = self.paddle,
+                        bricks = self.bricks,
+                        health = self.health,
+                        score = self.score,
+                        highScores = self.highScores,
+                        level = self.level,
+                        recoverPoints = self.recoverPoints
+                    })
+                end
             end
         end
     end
     for k, powerup in pairs(self.poweruplist) do
         if powerup:collides(self.paddle) then
+            --max of 2 balls
             if not powerup.consumed then
-                self.ball = Ball()
-                self.ball.dx = math.random(-200, 200)
-                self.ball.dy = math.random(-50, -60)
-                self.ball.x = self.paddle.x + (self.paddle.width / 2) - 4
-                self.ball.y = self.paddle.y - 8
-                self.ball.skin = math.random(7)
-                table.insert(self.balls, self.ball)
+                if powerup.powerup == 9 then
+                    if #self.balls < 2 then
+                        self.ball = Ball(math.random(7))
+                        self.ball.dx = math.random(-200, 200)
+                        self.ball.dy = math.random(-50, -60)
+                        self.ball.x = self.paddle.x + (self.paddle.width / 2) - 4
+                        self.ball.y = self.paddle.y - 8
+                        table.insert(self.balls, self.ball)
+                    else
+                        --make a if statement for the what powerup is it? and choose a correspoding point
+                        self.score = self.score + 100 --+1 ball quiv
+                    end
+                elseif powerup.powerup == 3 then
+                    if self.health < 3 then
+                        self.health = math.min(3, self.health + 1)
+                    else
+                        self.score = self.score + 100 
+                    end
+                elseif powerup.powerup == 4 then
+                    if self.health < 3  then
+                        self.health = 3
+                    else
+                        self.score = self.score + 100
+                    end
+                elseif powerup.powerup == 5 then
+                    if self.paddle.size < 4 then
+                        self.paddle.size = math.min(self.paddle.size + 1, 4)
+                        self.paddle.width = math.min(self.paddle.width + 32, 128)
+                    else
+                        self.score = self.score + 100
+                    end
+                else -- placeholder score adding only for other powerups
+                    self.score = self.score + 500
+                end
+                --debug powerupindex
+                self.testpowerupnumber = powerup.powerup 
+                gSounds['recover']:play()
                 powerup.consumed = true
             end
         end
         powerup:update(dt)
     end
-
+    --clean the powerups if consumed remove it or if below the screen
+    for k, powerup in pairs(self.poweruplist) do
+        if powerup.consumed or powerup.y >= VIRTUAL_HEIGHT then
+            table.remove(self.poweruplist, k)
+        end
+    end
     -- for rendering particle systems
     for k, brick in pairs(self.bricks) do
         brick:update(dt)
@@ -237,9 +291,7 @@ function PlayState:render()
 
     self.paddle:render()
     for k, ball in pairs(self.balls) do
-        if ball.mainball then
         ball:renderParticles()
-        end
     end
 
     for k, ball in pairs(self.balls) do
@@ -248,7 +300,10 @@ function PlayState:render()
 
     renderScore(self.score)
     renderHealth(self.health)
-
+    -- debug text
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.printf("Current Powerup: " .. tostring(self.testpowerupnumber), 0, VIRTUAL_HEIGHT / 2 - 16, VIRTUAL_WIDTH, 'center')
+    love.graphics.printf("Current Health: " .. tostring(self.health), 0, VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, 'center')
     -- pause text, if paused
     if self.paused then
         love.graphics.setFont(gFonts['large'])
@@ -260,6 +315,7 @@ function PlayState:checkVictory()
     for k, brick in pairs(self.bricks) do
         if brick.inPlay then
             return false
+        --elseif brick.powerup add for powerupcheck if its a locked brick
         end 
     end
 

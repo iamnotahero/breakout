@@ -51,7 +51,6 @@ function Paddle:update(dt)
     else
         self.dx = 0
     end
-
     -- math.max here ensures that we're the greater of 0 or the player's
     -- current calculated Y position when pressing up so that we don't
     -- go into the negatives; the movement calculation is simply our

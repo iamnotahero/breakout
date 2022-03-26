@@ -59,12 +59,7 @@ function ServeState:enter(params)
 
     -- init new ball (random color for fun)
     self.balls = {}
-    table.insert(self.balls, Ball())
-    self.ballcolor = math.random(7)
-    for k, ball in pairs(self.balls) do
-        ball.skin = self.ballcolor
-        ball.mainball = true
-    end
+    table.insert(self.balls, Ball(math.random(7)))
 end
 
 function ServeState:update(dt)
