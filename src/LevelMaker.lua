@@ -22,7 +22,6 @@ SOLID = 1           -- all colors the same in this row
 ALTERNATE = 2       -- alternate colors
 SKIP = 3            -- skip every other block
 NONE = 4            -- no blocks this row
-
 LevelMaker = Class{}
 
 --[[
@@ -39,7 +38,8 @@ function LevelMaker.createMap(level)
     }
     -- randomly choose the number of rows
     local numRows = math.random(1, 5)
-
+    local totalLocked = 0
+    local totalKeys = 0
     -- randomly choose the number of columns, ensuring odd
     local numCols = math.random(7, 13)
     numCols = numCols % 2 == 0 and (numCols + 1) or numCols
@@ -116,7 +116,12 @@ function LevelMaker.createMap(level)
             --if b.color == highestColor - math.random(0,1) and b.tier == highestTier - math.random(0,1) then
             --powerup chance 30% chance
             b.haspowerup = math.random(1, 100) < 60 and true or false
-            if b.haspowerup then
+            b.locked = math.random(1, 100) < 15 and true or false
+            if b.locked then
+                b.tier = 3
+                b.color = 6
+                totalLocked = totalLocked + 1
+            elseif b.haspowerup then
                 if b.color < 2 then
                     --terary function that checks first if conditon is true then return the first value using this for randonmization of powerup
                     b.powerupindex = math.random(1,100) < 3 and poweruptiers.high[math.random(1,2)] or math.random(1,100) < 10 and poweruptiers.mid[math.random(1,4)] or poweruptiers.low[math.random(1,2)]
@@ -127,9 +132,31 @@ function LevelMaker.createMap(level)
                     --b.powerupindex = poweruptiers.high[math.random(1,2)]
                     b.powerupindex = math.random(1,100) < 20 and poweruptiers.high[math.random(1,2)] or math.random(1,100) < 80 and poweruptiers.mid[math.random(1,4)] or poweruptiers.low[math.random(1,2)]
                 end
+            --[[else
+                if x == math.random(1,numCols) and not haspicked then
+                    b.locked = true
+                    b.tier = 3
+                    b.color = 5
+                    haspicked = true
+                end
+                --]]
             end
-            table.insert(bricks, b)
 
+            table.insert(bricks, b)
+            local willhavekey = math.random(1, 100) < 15 and true or false
+            for k, brick in pairs(bricks) do
+                if not brick.locked then
+                    if totalKeys < totalLocked then
+                        if willhavekey then
+                            brick.haspowerup = true
+                            brick.powerupindex = 10
+                            totalKeys = totalKeys + 1
+                        else
+                            willhavekey = math.random(1, 100) < 15 and true or false
+                        end
+                    end
+                end       
+            end
             -- Lua's version of the 'continue' statement
             ::continue::
         end

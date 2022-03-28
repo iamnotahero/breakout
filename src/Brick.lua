@@ -56,6 +56,7 @@ function Brick:init(x, y)
     self.color = 1
     self.haspowerup = false
     self.powerupindex = 0
+    self.locked = false
     self.x = x
     self.y = y
     self.width = 32
@@ -108,22 +109,26 @@ function Brick:hit()
    -- if self.powerup and self.tier == math.random
     -- if we're at a higher tier than the base, we need to go down a tier
     -- if we're already at the lowest color, else just go down a color
-    if self.tier > 0 then
-        if self.color == 1 then
-            self.tier = self.tier - 1
-            self.color = 5
+    --redundant
+    if not self.locked then
+        if self.tier > 0 then
+            if self.color == 1 then
+                self.tier = self.tier - 1
+                self.color = 5
+            else
+                self.color = self.color - 1
+            end
         else
-            self.color = self.color - 1
+            -- if we're in the first tier and the base color, remove brick from play
+            if self.color == 1 then
+                self.inPlay = false
+            else
+                self.color = self.color - 1
+            end
         end
     else
-        -- if we're in the first tier and the base color, remove brick from play
-        if self.color == 1 then
-            self.inPlay = false
-        else
-            self.color = self.color - 1
-        end
+        --something
     end
-
     -- play a second layer sound if the brick is destroyed
     if not self.inPlay then
         gSounds['brick-hit-1']:stop()

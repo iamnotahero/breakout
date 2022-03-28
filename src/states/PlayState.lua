@@ -28,11 +28,12 @@ function PlayState:enter(params)
     self.highScores = params.highScores
     self.level = params.level
     self.balls = params.balls
-    self.poweruplist = {}
+    self.poweruplist = params.poweruplist
+    self.hardballcounter = 0
+    self.keys = params.keys
+    self.recoverPoints = params.recoverPoints
     --debug
     self.testpowerupnumber = 0;
-    self.recoverPoints = 5000
-
     -- give ball random starting velocity
     for k, ball in pairs(self.balls) do
         ball.dx = math.random(-200, 200)
@@ -41,6 +42,9 @@ function PlayState:enter(params)
 end
 
 function PlayState:update(dt)
+    if self.hardballcounter > 0 then
+        self.hardballcounter = self.hardballcounter - dt
+    end
     if self.paused then
         if love.keyboard.wasPressed('space') then
             self.paused = false
@@ -86,23 +90,27 @@ function PlayState:update(dt)
 
             -- only check collision if we're in play
             if brick.inPlay and ball:collides(brick) then
-
-                -- add to score
-                self.score = self.score + (brick.tier * 200 + brick.color * 25)
-                --adds powerup to table
-                if brick.haspowerup then
-                    table.insert(self.poweruplist, Powerup(brick.x,brick.y,brick.powerupindex))
-                    -- chance of still having a powerup in the brick
-                    -- math.random(1, 2) == 1 and true or false
-                    gSounds['victory']:play()
-                    brick.haspowerup = false
+                if brick.locked and self.keys > 0 then
+                    self.keys = self.keys - 1
+                    brick.inPlay = false
+                    --brick.locked = false
+                    self.score = self.score + (brick.tier * 1000 + brick.color * 25)
+                elseif not brick.locked then
+                    -- add to score
+                    self.score = self.score + (brick.tier * 200 + brick.color * 25)
+                    --adds powerup to table
+                    if brick.haspowerup then
+                        table.insert(self.poweruplist, Powerup(brick.x,brick.y,brick.powerupindex))
+                        -- chance of still having a powerup in the brick
+                        -- math.random(1, 2) == 1 and true or false
+                        gSounds['victory']:play()
+                        brick.haspowerup = false
+                    end
+                    -- trigger the brick's hit function, which removes it from play
+                    --ok repeat this code to simulate stronger ball
+                    brick:hit()
                 end
-                -- trigger the brick's hit function, which removes it from play
-                --ok repeat this code to simulate stronger ball
-                brick:hit()
-                brick:hit()
-                brick:hit()
-                -- if we have enough points, recover a point of health
+                -- if we have enough points, recover a point of health                
                 if self.score > self.recoverPoints then
                     -- can't go above 3 health
                     self.health = math.min(3, self.health + 1)
@@ -127,6 +135,8 @@ function PlayState:update(dt)
                         score = self.score,
                         highScores = self.highScores,
                         balls = self.balls,
+                        keys = self.keys,
+                        poweruplist = self.poweruplist,
                         recoverPoints = self.recoverPoints
                     })
                 end
@@ -142,35 +152,38 @@ function PlayState:update(dt)
 
                 -- left edge; only check if we're moving right, and offset the check by a couple of pixels
                 -- so that flush corner hits register as Y flips, not X flips
-                if ball.x + 2 < brick.x and ball.dx > 0 then
+                ---[[
+                if self.hardballcounter == 0 then
+                    if ball.x + 2 < brick.x and ball.dx > 0 then
+                        
+                        -- flip x velocity and reset position outside of brick
+                        ball.dx = -ball.dx
+                        ball.x = brick.x - 8
                     
-                    -- flip x velocity and reset position outside of brick
-                    ball.dx = -ball.dx
-                    ball.x = brick.x - 8
-                
-                -- right edge; only check if we're moving left, , and offset the check by a couple of pixels
-                -- so that flush corner hits register as Y flips, not X flips
-                elseif ball.x + 6 > brick.x + brick.width and ball.dx < 0 then
+                    -- right edge; only check if we're moving left, , and offset the check by a couple of pixels
+                    -- so that flush corner hits register as Y flips, not X flips
+                    elseif ball.x + 6 > brick.x + brick.width and ball.dx < 0 then
+                        
+                        -- flip x velocity and reset position outside of brick
+                        ball.dx = -ball.dx
+                        ball.x = brick.x + 32
                     
-                    -- flip x velocity and reset position outside of brick
-                    ball.dx = -ball.dx
-                    ball.x = brick.x + 32
-                
-                -- top edge if no X collisions, always check
-                elseif ball.y < brick.y then
+                    -- top edge if no X collisions, always check
+                    elseif ball.y < brick.y then
+                        
+                        -- flip y velocity and reset position outside of brick
+                        ball.dy = -ball.dy
+                        ball.y = brick.y - 8
                     
-                    -- flip y velocity and reset position outside of brick
-                    ball.dy = -ball.dy
-                    ball.y = brick.y - 8
-                
-                -- bottom edge if no X collisions or top collision, last possibility
-                else
-                    
-                    -- flip y velocity and reset position outside of brick
-                    ball.dy = -ball.dy
-                    ball.y = brick.y + 16
+                    -- bottom edge if no X collisions or top collision, last possibility
+                    else
+                        
+                        -- flip y velocity and reset position outside of brick
+                        ball.dy = -ball.dy
+                        ball.y = brick.y + 16
+                    end
                 end
-
+                --]]
                 -- slightly scale the y velocity to speed up the game, capping at +- 150
                 if math.abs(ball.dy) < 150 then
                     ball.dy = ball.dy * 1.02
@@ -207,6 +220,8 @@ function PlayState:update(dt)
                         score = self.score,
                         highScores = self.highScores,
                         level = self.level,
+                        keys = self.keys,
+                        poweruplist = self.poweruplist,
                         recoverPoints = self.recoverPoints
                     })
                 end
@@ -228,6 +243,18 @@ function PlayState:update(dt)
                     else
                         --make a if statement for the what powerup is it? and choose a correspoding point
                         self.score = self.score + 100 --+1 ball quiv
+                    end
+                elseif powerup.powerup == 8 then
+                    if self.hardballcounter < 60 then
+                        self.hardballcounter = self.hardballcounter + 20
+                    else
+                        self.score = self.score + 100
+                    end
+                elseif powerup.powerup == 10 then
+                    if self.keys < 5 then
+                        self.keys = self.keys + 1 
+                    else
+                        self.score = self.score + 100
                     end
                 elseif powerup.powerup == 3 then
                     if self.health < 3 then
@@ -300,10 +327,17 @@ function PlayState:render()
 
     renderScore(self.score)
     renderHealth(self.health)
+
+    if self.hardballcounter > 0 then
+        renderCounter(self.hardballcounter)
+    end
+    if self.keys > 0 then
+        renderKeys(self.keys)
+    end
     -- debug text
     love.graphics.setFont(gFonts['small'])
     love.graphics.printf("Current Powerup: " .. tostring(self.testpowerupnumber), 0, VIRTUAL_HEIGHT / 2 - 16, VIRTUAL_WIDTH, 'center')
-    love.graphics.printf("Current Health: " .. tostring(self.health), 0, VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, 'center')
+    love.graphics.printf("Current RecoverPoints: " .. tostring(self.recoverPoints), 0, VIRTUAL_HEIGHT / 2, VIRTUAL_WIDTH, 'center')
     -- pause text, if paused
     if self.paused then
         love.graphics.setFont(gFonts['large'])
@@ -313,7 +347,7 @@ end
 
 function PlayState:checkVictory()
     for k, brick in pairs(self.bricks) do
-        if brick.inPlay then
+        if brick.inPlay and not brick.locked then
             return false
         --elseif brick.powerup add for powerupcheck if its a locked brick
         end 

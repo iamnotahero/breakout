@@ -303,3 +303,13 @@ function renderScore(score)
     love.graphics.print('Score:', VIRTUAL_WIDTH - 60, 5)
     love.graphics.printf(tostring(score), VIRTUAL_WIDTH - 50, 5, 40, 'right')
 end
+function renderCounter(counter)
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.print('Powerup Time:', VIRTUAL_WIDTH - 90, 20)
+    love.graphics.printf(tostring(math.floor(counter)), VIRTUAL_WIDTH - 60, 20, 40, 'right')
+end
+function renderKeys(keys)
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.print('Keys:', VIRTUAL_WIDTH - 60, 25)
+    love.graphics.printf(tostring(keys), VIRTUAL_WIDTH - 60, 25, 40, 'right')
+end
