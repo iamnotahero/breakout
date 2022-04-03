@@ -54,7 +54,9 @@ function PaddleSelectState:update(dt)
             level = 1,
             keys = 0,
             poweruplist = {},
-            recoverPoints = 5000
+            recoverPoints = 5000,
+            startend = false,
+            endcount = 15
         })
     end
 

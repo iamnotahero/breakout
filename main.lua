@@ -94,6 +94,7 @@ function love.load()
         ['recover'] = love.audio.newSource('sounds/recover.wav', 'static'),
         ['high-score'] = love.audio.newSource('sounds/high_score.wav', 'static'),
         ['pause'] = love.audio.newSource('sounds/pause.wav', 'static'),
+        ['lock-hit'] = love.audio.newSource('sounds/lock-hit.wav', 'static'),
 
         ['music'] = love.audio.newSource('sounds/music.wav', 'static')
     }
@@ -305,8 +306,8 @@ function renderScore(score)
 end
 function renderCounter(counter)
     love.graphics.setFont(gFonts['small'])
-    love.graphics.print('Powerup Time:', VIRTUAL_WIDTH - 90, 20)
-    love.graphics.printf(tostring(math.floor(counter)), VIRTUAL_WIDTH - 60, 20, 40, 'right')
+    love.graphics.print('Powerup Time:', VIRTUAL_WIDTH - 90, 15)
+    love.graphics.printf(tostring(math.floor(counter)), VIRTUAL_WIDTH - 60, 15, 40, 'right')
 end
 function renderKeys(keys)
     love.graphics.setFont(gFonts['small'])

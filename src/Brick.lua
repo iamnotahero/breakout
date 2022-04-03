@@ -47,7 +47,13 @@ paletteColors = {
         ['r'] = 251,
         ['g'] = 242,
         ['b'] = 54
-    }
+    },
+    --grey
+    [6] = {
+        ['r'] = 192,
+        ['g'] = 192,
+        ['b'] = 192
+    },
 }
 
 function Brick:init(x, y)
@@ -87,30 +93,28 @@ end
     changing its color otherwise.
 ]]
 function Brick:hit()
+    --don't lower tier if locked
+    if not self.locked then
     -- set the particle system to interpolate between two colors; in this case, we give
     -- it our self.color but with varying alpha; brighter for higher tiers, fading to 0
-    -- over the particle's lifetime (the second color)
-    self.psystem:setColors(
-        paletteColors[self.color].r / 255,
-        paletteColors[self.color].g / 255,
-        paletteColors[self.color].b / 255,
-        55 * (self.tier + 1) / 255,
-        paletteColors[self.color].r / 255,
-        paletteColors[self.color].g / 255,
-        paletteColors[self.color].b / 255,
-        0
-    )
-    self.psystem:emit(64)
-
-    -- sound on hit
-    gSounds['brick-hit-2']:stop()
-    gSounds['brick-hit-2']:play()
-
-   -- if self.powerup and self.tier == math.random
+    -- over the particle's lifetime (the second color)        
+        self.psystem:setColors(
+            paletteColors[self.color].r / 255,
+            paletteColors[self.color].g / 255,
+            paletteColors[self.color].b / 255,
+            55 * (self.tier + 1) / 255,
+            paletteColors[self.color].r / 255,
+            paletteColors[self.color].g / 255,
+            paletteColors[self.color].b / 255,
+            0
+        )
+    
+        self.psystem:emit(64)
+        -- sound on hit
+        gSounds['brick-hit-2']:stop()
+        gSounds['brick-hit-2']:play()    
     -- if we're at a higher tier than the base, we need to go down a tier
-    -- if we're already at the lowest color, else just go down a color
-    --redundant
-    if not self.locked then
+    -- if we're already at the lowest color, else just go down a color            
         if self.tier > 0 then
             if self.color == 1 then
                 self.tier = self.tier - 1
@@ -127,7 +131,11 @@ function Brick:hit()
             end
         end
     else
-        --something
+
+        gSounds['lock-hit']:stop()
+        gSounds['lock-hit']:play()
+        self.inPlay = false
+        --self.locked = false
     end
     -- play a second layer sound if the brick is destroyed
     if not self.inPlay then

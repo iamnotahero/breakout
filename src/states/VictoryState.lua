@@ -22,6 +22,8 @@ function VictoryState:enter(params)
     self.balls = params.balls
     self.keys = params.keys
     self.poweruplist = params.poweruplist
+    self.startend = params.startend
+    self.endcount = params.endcount
     self.recoverPoints = params.recoverPoints
 end
 
@@ -49,6 +51,8 @@ function VictoryState:update(dt)
             highScores = self.highScores,
             keys = self.keys,
             poweruplist = self.poweruplist,
+            startend = self.startend,
+            endcount = self.endcount,
             recoverPoints = self.recoverPoints
         })
     end

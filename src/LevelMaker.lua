@@ -115,8 +115,8 @@ function LevelMaker.createMap(level)
             end 
             --if b.color == highestColor - math.random(0,1) and b.tier == highestTier - math.random(0,1) then
             --powerup chance 30% chance
-            b.haspowerup = math.random(1, 100) < 60 and true or false
-            b.locked = math.random(1, 100) < 15 and true or false
+            b.haspowerup = math.random(1, 100) < 40 and true or false
+            b.locked = math.random(1, 100) < 10 and true or false
             if b.locked then
                 b.tier = 3
                 b.color = 6
